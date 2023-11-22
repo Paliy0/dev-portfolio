@@ -1,14 +1,15 @@
 ---
-title: Markdown Mystery Tour
+title: Bank API
 publishDate: 2020-03-02 00:00:00
 img: /assets/stock-1.jpg
 img_alt: Iridescent ripples of a bright blue and pink liquid
 description: |
-  We designed a whodunnit-style game to introduce Markdown formatting. Suspense — suspicion — syntax!
+  Project created for University as part of the Code Generation course. It consists of a full web application for a Bank featuring... //TODO
 tags:
-  - Design
-  - Dev
-  - User Testing
+  - API Design & specification
+  - Front-end
+  - Back-end
+  - Functional tests
 ---
 
 ## Level-two heading
