@@ -1,0 +1,215 @@
+---
+// src/pages/blog/[...slug].astro
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Hero from '../../components/Hero.astro';
+import Icon from '../../components/Icon.astro';
+import Pill from '../../components/Pill.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await post.render();
+
+// Format date
+const formattedDate = new Date(post.data.pubDate).toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+---
+
+<BaseLayout title={post.data.title} description={post.data.description}>
+  <div class="stack gap-20">
+    <div class="stack gap-15">
+      <header>
+        <div class="wrapper stack gap-2">
+          <a class="back-link" href="/blog/">
+            <Icon icon="arrow-left" /> Back to Blog
+          </a>
+          <Hero title={post.data.title} align="start">
+            <div class="details">
+              <div class="metadata">
+                <span class="date">
+                  <Icon icon="calendar" size="1.2em" /> {formattedDate}
+                </span>
+                {post.data.readingTime && (
+                  <span class="reading-time">
+                    <Icon icon="clock" size="1.2em" /> {post.data.readingTime} min read
+                  </span>
+                )}
+              </div>
+              {post.data.tags && (
+                <div class="tags">
+                  {post.data.tags.map((tag) => <Pill>{tag}</Pill>)}
+                </div>
+              )}
+            </div>
+          </Hero>
+        </div>
+      </header>
+      <main class="wrapper">
+        <article class="content">
+          <Content />
+        </article>
+      </main>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  header {
+    padding-bottom: 2.5rem;
+    border-bottom: 1px solid var(--gray-800);
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--gray-300);
+    text-decoration: none;
+    margin-bottom: 1rem;
+  }
+
+  .back-link:hover {
+    color: var(--gray-0);
+  }
+
+  .details {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-top: 1rem;
+  }
+
+  .metadata {
+    display: flex;
+    gap: 2rem;
+    color: var(--gray-400);
+    align-items: center;
+  }
+
+  .date, .reading-time {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .tags {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .content {
+    max-width: 65ch;
+    margin-inline: auto;
+    padding: 0 2rem;
+  }
+
+  .content :global(h1) {
+    font-size: var(--text-3xl);
+    color: var(--gray-0);
+    margin: 3rem 0 1.5rem;
+  }
+
+  .content :global(h2) {
+    font-size: var(--text-2xl);
+    color: var(--gray-0);
+    margin: 2.5rem 0 1.25rem;
+  }
+
+  .content :global(h3) {
+    font-size: var(--text-xl);
+    color: var(--gray-0);
+    margin: 2rem 0 1rem;
+  }
+
+  .content :global(p) {
+    color: var(--gray-300);
+    line-height: 1.8;
+    margin: 1.25rem 0;
+  }
+
+  .content :global(ul),
+  .content :global(ol) {
+    color: var(--gray-300);
+    line-height: 1.8;
+    margin: 1.25rem 0;
+    padding-left: 1.5rem;
+  }
+
+  .content :global(li) {
+    margin: 0.5rem 0;
+  }
+
+  .content :global(li::marker) {
+    color: var(--accent-regular);
+  }
+
+  .content :global(code) {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.9em;
+    background: var(--gray-800);
+    padding: 0.2em 0.4em;
+    border-radius: 0.25em;
+    color: var(--gray-200);
+  }
+
+  .content :global(pre) {
+    background: var(--gray-800);
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin: 2rem 0;
+  }
+
+  .content :global(pre code) {
+    background: none;
+    padding: 0;
+    border-radius: 0;
+  }
+
+  .content :global(blockquote) {
+    border-left: 4px solid var(--accent-regular);
+    padding: 1rem 0 1rem 1.5rem;
+    margin: 2rem 0;
+    background: var(--gray-999_40);
+    border-radius: 0 0.5rem 0.5rem 0;
+  }
+
+  .content :global(blockquote p) {
+    margin: 0;
+    font-style: italic;
+  }
+
+  .content :global(hr) {
+    border: none;
+    border-top: 1px solid var(--gray-800);
+    margin: 3rem 0;
+  }
+
+  @media (min-width: 50em) {
+    .back-link {
+      margin-bottom: 2rem;
+    }
+
+    .details {
+      flex-direction: row;
+      margin-top: 2rem;
+    }
+
+    .content {
+      padding: 0;
+    }
+  }
+</style>

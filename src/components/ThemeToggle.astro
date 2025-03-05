@@ -78,13 +78,21 @@ import Icon from './Icon.astro';
 			const setTheme = (dark: boolean) => {
 				document.documentElement.classList[dark ? 'add' : 'remove']('theme-dark');
 				button.setAttribute('aria-pressed', String(dark));
+				// Store the theme preference
+				localStorage.setItem('theme', dark ? 'dark' : 'light');
 			};
 
 			// Toggle the theme when a user clicks the button.
 			button.addEventListener('click', () => setTheme(!this.isDark()));
 
-			// Initialize button state to reflect current theme.
-			setTheme(this.isDark());
+			// Initialize theme based on stored preference
+			const storedTheme = localStorage.getItem('theme');
+			if (storedTheme) {
+				setTheme(storedTheme === 'dark');
+			} else {
+				// If no stored preference, use system preference
+				setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches);
+			}
 		}
 
 		isDark() {
@@ -92,4 +100,12 @@ import Icon from './Icon.astro';
 		}
 	}
 	customElements.define('theme-toggle', ThemeToggle);
+
+	// Add event listener for theme persistence during navigation
+	document.addEventListener('astro:after-swap', () => {
+		const theme = localStorage.getItem('theme');
+		if (theme) {
+			document.documentElement.classList[theme === 'dark' ? 'add' : 'remove']('theme-dark');
+		}
+	});
 </script>

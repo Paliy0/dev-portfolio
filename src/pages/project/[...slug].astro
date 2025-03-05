@@ -1,0 +1,273 @@
+---
+// src/pages/project/[...slug].astro
+import { getGitHubRepos, getRepoReadme } from '../../lib/github';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Hero from '../../components/Hero.astro';
+import Icon from '../../components/Icon.astro';
+import Pill from '../../components/Pill.astro';
+
+export async function getStaticPaths() {
+  const repos = await getGitHubRepos();
+  
+  return repos.map((repo) => ({
+    params: { slug: repo.name },
+    props: { repo }
+  }));
+}
+
+const { repo } = Astro.props;
+const readme = await getRepoReadme(repo.name);
+
+// Format dates
+const createdAt = new Date(repo.created_at).toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric'
+});
+
+const updatedAt = new Date(repo.updated_at).toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric'
+});
+
+const socialPreview = `https://opengraph.githubassets.com/1/paliy0/${repo.name}`;
+---
+
+<BaseLayout title={repo.name} description={repo.description}>
+  <div class="stack gap-20">
+    <div class="stack gap-15">
+      <header>
+        <div class="wrapper stack gap-2">
+          <a class="back-link" href="/work/">
+            <Icon icon="arrow-left" /> Work
+          </a>
+          <Hero title={repo.name} align="start">
+            <div class="details">
+              <div class="tags">
+                {repo.language && <Pill>{repo.language}</Pill>}
+                {repo.topics.map((topic) => <Pill>{topic}</Pill>)}
+              </div>
+              <p class="description">{repo.description}</p>
+            </div>
+          </Hero>
+        </div>
+      </header>
+
+      <main class="wrapper">
+        <div class="stack gap-10">
+          <div class="project-image">
+            <img
+              src={socialPreview}
+              alt={`${repo.name} preview`}
+              onerror="this.onerror=null; this.src='/placeholder-project.jpg';"
+            />
+          </div>
+          
+          <div class="content">
+            <div class="project-stats">
+              <div class="stat">
+                <Icon icon="star" size="1.33em" /> {repo.stargazers_count} Stars
+              </div>
+              <div class="stat">
+                <Icon icon="git-fork" size="1.33em" /> {repo.forks_count} Forks
+              </div>
+              <div class="stat">
+                <Icon icon="warning" size="1.33em" /> {repo.open_issues_count} Issues
+              </div>
+            </div>
+
+            <div class="project-dates">
+              <p>Created: {createdAt}</p>
+              <p>Last updated: {updatedAt}</p>
+            </div>
+
+            <div class="project-links">
+              <a href={repo.html_url} class="button" target="_blank" rel="noopener noreferrer">
+                <Icon icon="github-logo" /> View on GitHub
+              </a>
+              {repo.homepage && (
+                <a href={repo.homepage} class="button" target="_blank" rel="noopener noreferrer">
+                  <Icon icon="external-link" /> Live Demo
+                </a>
+              )}
+            </div>
+
+            {readme && (
+              <div class="readme">
+                <h2>README</h2>
+                <div class="markdown prose" set:html={readme} />
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  header {
+    padding-bottom: 2.5rem;
+    border-bottom: 1px solid var(--gray-800);
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--gray-300);
+    text-decoration: none;
+    margin-bottom: 1rem;
+  }
+
+  .back-link:hover {
+    color: var(--gray-0);
+  }
+
+  .details {
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem;
+    gap: 1.5rem;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .tags {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .description {
+    font-size: var(--text-lg);
+    max-width: 54ch;
+    color: var(--gray-300);
+  }
+
+  .content {
+    max-width: 65ch;
+    margin-inline: auto;
+  }
+
+  .project-image {
+    border-radius: 1.5rem;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .project-image img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+  }
+
+  .project-stats {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+    margin-block: 2rem;
+    color: var(--gray-300);
+  }
+
+  .stat {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .project-dates {
+    margin-bottom: 2rem;
+    color: var(--gray-300);
+  }
+
+  .project-links {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background-color: var(--gray-800);
+    color: var(--gray-100);
+    border-radius: 0.5rem;
+    text-decoration: none;
+    transition: background-color var(--theme-transition);
+  }
+
+  .button:hover {
+    background-color: var(--gray-700);
+  }
+
+  .readme {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--gray-800);
+  }
+
+  .prose {
+    color: var(--gray-200);
+    line-height: 1.6;
+  }
+
+  .prose :global(h1),
+  .prose :global(h2),
+  .prose :global(h3) {
+    color: var(--gray-0);
+    margin: 1.5rem 0 1rem;
+  }
+
+  .prose :global(p) {
+    margin-bottom: 1rem;
+  }
+
+  .prose :global(pre) {
+    background-color: var(--gray-800);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+  }
+
+  .prose :global(code) {
+    font-family: monospace;
+  }
+
+  .prose :global(ul),
+  .prose :global(ol) {
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+  }
+
+  .prose :global(li) {
+    margin: 0.5rem 0;
+  }
+
+  .prose :global(img) {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    margin: 1rem 0;
+  }
+
+  @media (min-width: 50em) {
+    .back-link {
+      display: block;
+      align-self: flex-start;
+    }
+
+    .details {
+      flex-direction: row;
+      gap: 2.5rem;
+    }
+
+    .content > :global(* + *) {
+      margin-top: 1rem;
+    }
+  }
+</style>

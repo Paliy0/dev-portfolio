@@ -7,6 +7,7 @@ import type { iconPaths } from './IconPaths';
 const textLinks: { label: string; href: string }[] = [
 	{ label: 'Home', href: '/' },
 	{ label: 'Work', href: '/work/' },
+	{ label: 'Blog', href: '/blog/' },
 	{ label: 'About', href: '/about/' },
 ];
 
@@ -17,7 +18,7 @@ const iconLinks: { label: string; href: string; icon: keyof typeof iconPaths }[]
 ];
 ---
 
-<nav>
+<nav transition:animate="none">
 	<div class="menu-header">
 		<a href="/" class="site-title">
 			<Icon icon="terminal-window" color="var(--accent-regular)" size="1.6em" gradient />
@@ -36,7 +37,7 @@ const iconLinks: { label: string; href: string; icon: keyof typeof iconPaths }[]
 		<ul class="nav-items">
 			{
 				textLinks.map(({ label, href }) => (
-					<li>
+					<li >
 						<a
 							aria-current={Astro.url.pathname === href}
 							class:list={[
@@ -354,6 +355,47 @@ const iconLinks: { label: string; href: string; icon: keyof typeof iconPaths }[]
 			display: none;
 		}
 	}
+	.nav-items::after {
+		content: '';
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		height: 2px;
+		background: var(--accent-regular);
+		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		pointer-events: none;
+	}
+
+	@media (min-width: 50em) {
+		.nav-items {
+			position: relative;
+			padding: 0.5rem 0.5625rem;
+		}
+
+		.link {
+			padding: 0.5rem 1rem;
+			border-radius: 999rem;
+			transition: color var(--theme-transition),
+						background-color var(--theme-transition);
+		}
+
+		.link.active {
+			color: var(--accent-text-over);
+			background-color: var(--accent-regular);
+		}
+
+		/* Update the sliding indicator for desktop */
+		.nav-items::after {
+			content: '';
+			position: absolute;
+			bottom: 0.5rem;
+			height: 2rem;
+			border-radius: 999rem;
+			background: var(--accent-regular);
+			z-index: -1;
+			transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		}
+	}
 
 	@media (min-width: 60em) {
 		.socials {
@@ -368,3 +410,57 @@ const iconLinks: { label: string; href: string; icon: keyof typeof iconPaths }[]
 		}
 	}
 </style>
+<script>
+	class MenuButton extends HTMLElement {
+		constructor() {
+			super();
+
+			// Inject menu toggle button when JS runs.
+			this.appendChild(this.querySelector('template')!.content.cloneNode(true));
+			const btn = this.querySelector('button')!;
+
+			// Hide menu (shown by default to support no-JS browsers).
+			const menu = document.getElementById('menu-content')!;
+			menu.hidden = true;
+			menu.classList.add('menu-content');
+
+			/** Set whether the menu is currently expanded or collapsed. */
+			const setExpanded = (expand: boolean) => {
+				btn.setAttribute('aria-expanded', expand ? 'true' : 'false');
+				menu.hidden = !expand;
+			};
+
+			// Toggle menu visibility when the menu button is clicked.
+			btn.addEventListener('click', () => setExpanded(menu.hidden));
+
+			// Hide menu button for large screens.
+			const handleViewports = (e: MediaQueryList | MediaQueryListEvent) => {
+				setExpanded(e.matches);
+				btn.hidden = e.matches;
+			};
+			const mediaQueries = window.matchMedia('(min-width: 50em)');
+			handleViewports(mediaQueries);
+			mediaQueries.addEventListener('change', handleViewports);
+		}
+	}
+	customElements.define('menu-button', MenuButton);
+
+	// Add sliding indicator functionality
+	const updateSlider = () => {
+		const navItems = document.querySelector('.nav-items');
+		const activeLink = navItems?.querySelector('.active') as HTMLElement;
+		const slider = navItems?.querySelector('::after') as HTMLElement;
+		
+		if (activeLink && slider && window.innerWidth >= 800) {
+			const linkRect = activeLink.getBoundingClientRect();
+			const navRect = navItems.getBoundingClientRect();
+			
+			slider.style.width = `${linkRect.width}px`;
+			slider.style.transform = `translateX(${linkRect.left - navRect.left}px)`;
+		}
+	};
+
+	// Update slider on page load and after transitions
+	document.addEventListener('astro:page-load', updateSlider);
+	window.addEventListener('resize', updateSlider);
+</script>

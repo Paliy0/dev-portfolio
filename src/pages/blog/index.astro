@@ -1,0 +1,43 @@
+---
+// src/pages/blog/index.astro
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Hero from '../../components/Hero.astro';
+import Grid from '../../components/Grid.astro';
+import BlogPreview from '../../components/BlogPreview.astro';
+
+const posts = (await getCollection('blog'))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+---
+
+<BaseLayout
+  title="Blog | Pablo Gulias"
+  description="Latest articles and technical posts"
+>
+  <div class="stack gap-20">
+    <main class="wrapper stack gap-8">
+      <Hero
+        title="Blog"
+        tagline="Thoughts, tutorials, and insights about software development."
+        align="start"
+      />
+      <div class="blog-grid">
+        {posts.map((post) => <BlogPreview post={post} />)}
+      </div>
+    </main>
+  </div>
+</BaseLayout>
+
+<style>
+  .blog-grid {
+    display: grid;
+    gap: 2rem;
+  }
+
+  @media (min-width: 50em) {
+    .blog-grid {
+      grid-template-columns: 1fr;
+      gap: 3rem;
+    }
+  }
+</style>
