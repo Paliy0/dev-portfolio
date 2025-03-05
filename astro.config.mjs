@@ -4,12 +4,16 @@ import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeExternalLinks from "rehype-external-links";
 import remarkGfm from "remark-gfm";
 
+import tailwindcss from "@tailwindcss/vite";
+
 export default defineConfig({
   vite: {
     env: {
       GITHUB_TOKEN: process.env.GITHUB_TOKEN,
       GITHUB_TOKEN: process.env.GITHUB_USERNAME,
     },
+
+    plugins: [tailwindcss()],
   },
   markdown: {
     syntaxHighlight: "shiki",
