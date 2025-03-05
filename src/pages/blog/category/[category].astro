@@ -1,0 +1,106 @@
+---
+// src/pages/blog/category/[category].astro
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import Hero from '../../../components/Hero.astro';
+import Icon from '../../../components/Icon.astro';
+import BlogPreview from '../../../components/BlogPreview.astro';
+import CategoryFilter from '../../../components/CategoryFilter.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  
+  // Get all unique categories
+  const categories = [...new Set(
+    posts.flatMap(post => post.data.tags || [])
+  )];
+  
+  // Create a path for each category
+  return categories.map(category => ({
+    params: { category: category.toLowerCase() },
+    props: { category }
+  }));
+}
+
+const { category } = Astro.props;
+const posts = await getCollection('blog');
+
+// Filter posts by the selected category
+const filteredPosts = posts
+  .filter(post => post.data.tags?.some(tag => tag.toLowerCase() === category.toLowerCase()))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+// Extract all unique categories for the filter component
+const allCategories = [...new Set(
+  posts.flatMap(post => post.data.tags || [])
+)].sort();
+
+// Capitalize the first letter of the category for display
+const displayCategory = category.charAt(0).toUpperCase() + category.slice(1);
+
+// For meta description, create a more natural sentence if category is plural
+const description = displayCategory.endsWith('s') 
+  ? `Articles about ${displayCategory} and related topics`
+  : `Articles about ${displayCategory} and related topics`;
+---
+
+<BaseLayout
+  title={`${displayCategory} Posts | Pablo Gulias Blog`}
+  description={description}
+>
+  <div class="stack gap-20">
+    <main class="wrapper stack gap-8">
+        <a class="back-link" href="/blog/">
+            <Icon icon="arrow-left" /> Back to Blog
+          </a>
+      <Hero
+        title={`${displayCategory} Posts`}
+        tagline={`Articles focusing on ${displayCategory} and related topics.`}
+        align="start"
+      />
+      
+      <CategoryFilter categories={allCategories} activeCategory={category.toLowerCase()} />
+      
+      <div class="blog-grid">
+        {filteredPosts.length > 0 
+          ? filteredPosts.map((post) => <BlogPreview post={post} />)
+          : <p class="no-posts">No posts found in this category.</p>
+        }
+      </div>
+    </main>
+  </div>
+</BaseLayout>
+
+<style>
+  .blog-grid {
+    display: grid;
+    gap: 2rem;
+  }
+
+  .no-posts {
+    color: var(--gray-300);
+    font-size: var(--text-lg);
+    text-align: center;
+    padding: 3rem 0;
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--gray-300);
+    text-decoration: none;
+    margin-bottom: 1rem;
+  }
+
+  .back-link:hover {
+    color: var(--gray-0);
+  }
+
+  @media (min-width: 50em) {
+    .blog-grid {
+      grid-template-columns: 1fr;
+      gap: 3rem;
+    }
+  }
+</style>

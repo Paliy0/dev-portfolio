@@ -3,11 +3,19 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Hero from '../../components/Hero.astro';
-import Grid from '../../components/Grid.astro';
 import BlogPreview from '../../components/BlogPreview.astro';
+import CategoryFilter from '../../components/CategoryFilter.astro';
 
-const posts = (await getCollection('blog'))
-  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+const posts = await getCollection('blog');
+posts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+// Extract all unique categories from post tags
+const allCategories = [...new Set(
+  posts.flatMap(post => post.data.tags || [])
+)].sort();
+
+// Current filter is null for the main blog page
+const activeCategory = null;
 ---
 
 <BaseLayout
@@ -21,6 +29,9 @@ const posts = (await getCollection('blog'))
         tagline="Thoughts, tutorials, and insights about software development."
         align="start"
       />
+      
+      <CategoryFilter categories={allCategories} activeCategory={activeCategory} />
+      
       <div class="blog-grid">
         {posts.map((post) => <BlogPreview post={post} />)}
       </div>
